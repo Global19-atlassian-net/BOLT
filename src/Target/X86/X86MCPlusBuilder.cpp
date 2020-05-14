@@ -665,7 +665,16 @@ public:
   }
 
   bool isActualLoad(const MCInst &Inst) const override {
-    return Info->get(Inst.getOpcode()).mayLoad();
+    auto opcode = Inst.getOpcode();
+    if (opcode == X86::REP_MOVSB_32 || opcode == X86::REP_MOVSB_32) {
+      return true;
+    }
+    if (Inst.getFlags() == X86::IP_HAS_REPEAT &&
+        (opcode == X86::MOVSB || opcode == X86::MOVSW ||
+         opcode == X86::MOVSL || opcode == X86::MOVSQ)) {
+      return true;
+    }
+    return Info->get(opcode).mayLoad();
   }
 
   bool isLoad(const MCInst &Inst) const override {
