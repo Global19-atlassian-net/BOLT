@@ -171,7 +171,7 @@ void LFenceInsertion::runOnFunctions(BinaryContext &BC) {
           //   pushq %rdi //Dummy to overwrite later
           //   pushq %rdi
           //   leaq 0x18(%rip), %rdi //After the retq
-          //   mov %rax, 8(%rsp) //Overwrite the dummy
+          //   movq %rdi, 8(%rsp) //Overwrite the dummy
           //   popq %rdi
           //   lfence
           //   pushq (%rsi)
