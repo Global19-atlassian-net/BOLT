@@ -178,6 +178,7 @@ void LFenceInsertion::runOnFunctions(BinaryContext &BC) {
           //   popq %rdi
           //   lfence
           //   pushq (%rsi)
+          //   lfence
           //   notq (%rsp)
           //   notq (%rsp)
           //   lfence
@@ -228,6 +229,10 @@ void LFenceInsertion::runOnFunctions(BinaryContext &BC) {
                                          MemRef.SegRegNum, 8);
           It = BB.insertInstruction(It, std::move(Pushq3));
           ++It;
+          MCInst LFence2;
+          MIB.createLfence(LFence2);
+          It = BB.insertInstruction(It, std::move(LFence2));
+          ++It;
           for (int i = 0; i < 2; i++) {
             MCInst Notq;
             MIB.createNot(Notq, MIB.getStackPointer(), 1, MIB.getNoRegister(), 0, nullptr,
@@ -235,9 +240,9 @@ void LFenceInsertion::runOnFunctions(BinaryContext &BC) {
             It = BB.insertInstruction(It, std::move(Notq));
             ++It;
           }
-          MCInst LFence2;
-          MIB.createLfence(LFence2);
-          It = BB.insertInstruction(It, std::move(LFence2));
+          MCInst LFence3;
+          MIB.createLfence(LFence3);
+          It = BB.insertInstruction(It, std::move(LFence3));
           ++It;
           MCInst Retq;
           MIB.createReturn(Retq);
@@ -251,6 +256,7 @@ void LFenceInsertion::runOnFunctions(BinaryContext &BC) {
           //   jmpq *(%rsi)
           // gets rewritten to:
           //   pushq (%rsi)
+          //   lfence
           //   notq (%rsp)
           //   notq (%rsp)
           //   lfence
@@ -264,6 +270,10 @@ void LFenceInsertion::runOnFunctions(BinaryContext &BC) {
                                          MemRef.SegRegNum, 8);
           It = BB.insertInstruction(It, std::move(Push));
           ++It;
+          MCInst LFence1;
+          MIB.createLfence(LFence1);
+          It = BB.insertInstruction(It, std::move(LFence1));
+          ++It;
           for (int i = 0; i < 2; i++) {
             MCInst Notq;
             MIB.createNot(Notq, MIB.getStackPointer(), 1, MIB.getNoRegister(), 0, nullptr,
@@ -271,9 +281,9 @@ void LFenceInsertion::runOnFunctions(BinaryContext &BC) {
             It = BB.insertInstruction(It, std::move(Notq));
             ++It;
           }
-          MCInst LFence;
-          MIB.createLfence(LFence);
-          It = BB.insertInstruction(It, std::move(LFence));
+          MCInst LFence2;
+          MIB.createLfence(LFence2);
+          It = BB.insertInstruction(It, std::move(LFence2));
           ++It;
           MCInst Retq;
           MIB.createReturn(Retq);
