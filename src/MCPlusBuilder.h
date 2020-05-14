@@ -574,6 +574,11 @@ public:
     return false;
   }
 
+  virtual bool isActualLoad(const MCInst &Inst) const {
+    llvm_unreachable("not implemented");
+    return false;
+  }
+
   virtual bool isLoad(const MCInst &Inst) const {
     llvm_unreachable("not implemented");
     return false;

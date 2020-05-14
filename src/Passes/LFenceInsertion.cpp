@@ -126,7 +126,10 @@ void LFenceInsertion::runOnFunctions(BinaryContext &BC) {
           LFencedBranches++;
           LastWasLFence = false;
         } else if (opts::LFenceLoads &&
-                   MIB.isLoad(Inst) && !MIB.isIndirectBranch(Inst) && !MIB.isIndirectCall(Inst)) {
+                   MIB.isActualLoad(Inst) &&
+                   !MIB.isReturn(Inst) &&
+                   !MIB.isIndirectBranch(Inst) &&
+                   !MIB.isIndirectCall(Inst)) {
           // Inserts an lfence after every load from memory.
           // For example:
           //   mov    0x8(%rbx), %rdi

@@ -664,6 +664,10 @@ public:
     }
   }
 
+  bool isActualLoad(const MCInst &Inst) const override {
+    return Info->get(Inst.getOpcode()).mayLoad();
+  }
+
   bool isLoad(const MCInst &Inst) const override {
     if (isPop(Inst))
       return true;
