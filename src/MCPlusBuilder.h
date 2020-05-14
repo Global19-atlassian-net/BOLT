@@ -1438,11 +1438,12 @@ public:
     return false;
   }
 
-  /// Create instruction to bitwise invert contents of target
-  virtual bool createNot(MCInst &Inst, const MCPhysReg &BaseReg, int64_t Scale,
+  /// Create instruction to left shift contents of target
+  virtual bool createShl(MCInst &Inst, const MCPhysReg &BaseReg, int64_t Scale,
                          const MCPhysReg &IndexReg, int64_t Offset,
                          const MCExpr *OffsetExpr,
-                         const MCPhysReg &AddrSegmentReg, int Size) const {
+                         const MCPhysReg &AddrSegmentReg,
+                         uint8_t Immediate, int Size) const {
     llvm_unreachable("not implemented");
     return false;
   }

@@ -148,17 +148,14 @@ void LFenceInsertion::runOnFunctions(BinaryContext &BC) {
           // For example:
           //   retq
           // gets rewritten to:
-          //   notq (%rsp)
-          //   notq (%rsp)
+          //   shlq $0, (%rsp)
           //   lfence
           //   retq
-          for (int i = 0; i < 2; i++) {
-            MCInst Notq;
-            MIB.createNot(Notq, MIB.getStackPointer(), 1, MIB.getNoRegister(), 0, nullptr,
-                          MIB.getNoRegister(), 8);
-            It = BB.insertInstruction(It, std::move(Notq));
-            ++It;
-          }
+          MCInst Shlq;
+          MIB.createShl(Shlq, MIB.getStackPointer(), 1, MIB.getNoRegister(), 0, nullptr,
+                        MIB.getNoRegister(), 0, 8);
+          It = BB.insertInstruction(It, std::move(Shlq));
+          ++It;
           MCInst LFence;
           MIB.createLfence(LFence);
           It = BB.insertInstruction(It, std::move(LFence));
@@ -179,8 +176,7 @@ void LFenceInsertion::runOnFunctions(BinaryContext &BC) {
           //   lfence
           //   pushq (%rsi)
           //   lfence
-          //   notq (%rsp)
-          //   notq (%rsp)
+          //   shlq $0, (%rsp)
           //   lfence
           //   retq
 
@@ -233,13 +229,11 @@ void LFenceInsertion::runOnFunctions(BinaryContext &BC) {
           MIB.createLfence(LFence2);
           It = BB.insertInstruction(It, std::move(LFence2));
           ++It;
-          for (int i = 0; i < 2; i++) {
-            MCInst Notq;
-            MIB.createNot(Notq, MIB.getStackPointer(), 1, MIB.getNoRegister(), 0, nullptr,
-                          MIB.getNoRegister(), 8);
-            It = BB.insertInstruction(It, std::move(Notq));
-            ++It;
-          }
+          MCInst Shlq;
+          MIB.createShl(Shlq, MIB.getStackPointer(), 1, MIB.getNoRegister(), 0, nullptr,
+                        MIB.getNoRegister(), 0, 8);
+          It = BB.insertInstruction(It, std::move(Shlq));
+          ++It;
           MCInst LFence3;
           MIB.createLfence(LFence3);
           It = BB.insertInstruction(It, std::move(LFence3));
@@ -257,8 +251,7 @@ void LFenceInsertion::runOnFunctions(BinaryContext &BC) {
           // gets rewritten to:
           //   pushq (%rsi)
           //   lfence
-          //   notq (%rsp)
-          //   notq (%rsp)
+          //   shlq $0, (%rsp)
           //   lfence
           //   retq
           IndirectBranchInfo BrInfo(Inst, MIB);
@@ -274,13 +267,11 @@ void LFenceInsertion::runOnFunctions(BinaryContext &BC) {
           MIB.createLfence(LFence1);
           It = BB.insertInstruction(It, std::move(LFence1));
           ++It;
-          for (int i = 0; i < 2; i++) {
-            MCInst Notq;
-            MIB.createNot(Notq, MIB.getStackPointer(), 1, MIB.getNoRegister(), 0, nullptr,
-                          MIB.getNoRegister(), 8);
-            It = BB.insertInstruction(It, std::move(Notq));
-            ++It;
-          }
+          MCInst Shlq;
+          MIB.createShl(Shlq, MIB.getStackPointer(), 1, MIB.getNoRegister(), 0, nullptr,
+                        MIB.getNoRegister(), 0, 8);
+          It = BB.insertInstruction(It, std::move(Shlq));
+          ++It;
           MCInst LFence2;
           MIB.createLfence(LFence2);
           It = BB.insertInstruction(It, std::move(LFence2));

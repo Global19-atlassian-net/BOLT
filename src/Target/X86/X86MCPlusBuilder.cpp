@@ -2762,17 +2762,18 @@ public:
     return true;
   }
 
-  bool createNot(MCInst &Inst, const MCPhysReg &BaseReg, int64_t Scale,
+  bool createShl(MCInst &Inst, const MCPhysReg &BaseReg, int64_t Scale,
                  const MCPhysReg &IndexReg, int64_t Offset,
                  const MCExpr *OffsetExpr, const MCPhysReg &AddrSegmentReg,
-                 int Size) const override {
+                 const uint8_t Immediate, int Size) const override {
     unsigned NewOpcode;
     switch (Size) {
       default:
         return false;
-      case 2:      NewOpcode = X86::NOT16m; break;
-      case 4:      NewOpcode = X86::NOT32m; break;
-      case 8:      NewOpcode = X86::NOT64m; break;
+      case 1:      NewOpcode = X86::SHL8mi; break;
+      case 2:      NewOpcode = X86::SHL16mi; break;
+      case 4:      NewOpcode = X86::SHL32mi; break;
+      case 8:      NewOpcode = X86::SHL64mi; break;
     }
     Inst.setOpcode(NewOpcode);
     Inst.clear();
@@ -2784,6 +2785,7 @@ public:
     else
       Inst.addOperand(MCOperand::createImm(Offset)); // Displacement
     Inst.addOperand(MCOperand::createReg(AddrSegmentReg));
+    Inst.addOperand(MCOperand::createImm(Immediate));
     return true;
   }
 
