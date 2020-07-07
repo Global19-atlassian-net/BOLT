@@ -13,7 +13,11 @@
 //
 // The runtime performance impact of this is significant!
 //
-// NOTE: This pass is incompatible with RetpolineInsertion.
+// NOTE: This pass is incompatible with RetpolineInsertion. It is also
+//       incompatible with ABIs that allow red-zones, due the the
+//       flags-preserving jmp mitigation clobbering 8 bytes in the red-zone.
+//       Options are to disable red-zone when compiling the target binary,
+//       or configure the compilers to never generate memory-indirect jmps.
 //===----------------------------------------------------------------------===//
 #include "LFenceInsertion.h"
 #include "RewriteInstance.h"
@@ -78,6 +82,11 @@ LFenceIndirectJumps("lfence-indirect-jumps",
 namespace llvm {
 namespace bolt {
 
+static void report_redzone_error() {
+  errs() << "BOLT-ERROR: 'Redzone access in function with indirect jmp mitigation'\n";
+  exit(1);
+}
+
 void LFenceInsertion::runOnFunctions(BinaryContext &BC) {
 
   if (!opts::InsertLFences)
@@ -96,6 +105,8 @@ void LFenceInsertion::runOnFunctions(BinaryContext &BC) {
   uint32_t LFencedIndirectJmps = 0;
   for (auto &It : BC.getBinaryFunctions()) {
     auto &Function = It.second;
+    bool MemIndirectJmp = false;
+    bool Redzone = false;
 
     // For performance reasons, we may want to skip some functions and
     // manually add lfences to them only where absolutely needed.
@@ -106,6 +117,19 @@ void LFenceInsertion::runOnFunctions(BinaryContext &BC) {
       bool LastWasLFence = false;
       for (auto It = BB.begin(); It != BB.end(); ++It) {
         auto &Inst = *It;
+
+        if (MIB.isActualLoad(Inst) && MIB.isBranchOnMem(Inst)) {
+          IndirectBranchInfo BrInfo(Inst, MIB);
+          const auto &MemRef = BrInfo.Memory;
+
+          if (MemRef.BaseRegNum == MIB.getStackPointer() &&
+              MemRef.DispValue < 0) {
+            if (MemIndirectJmp) {
+              report_redzone_error();
+            }
+            Redzone = true;
+          }
+        }
 
         if (opts::LFenceConditionalBranches &&
             MIB.isConditionalBranch(Inst)) {
@@ -175,11 +199,10 @@ void LFenceInsertion::runOnFunctions(BinaryContext &BC) {
           //   popq %rdi
           //   lfence
           //   pushq (%rsi)
-          //   lfence
+          //   lfence //XXX Not needed, according to Intel?
           //   shlq $0, (%rsp)
           //   lfence
           //   retq
-
           IndirectBranchInfo BrInfo(Inst, MIB);
           const auto &MemRef = BrInfo.Memory;
           auto *Ctx = BC.Ctx.get();
@@ -250,10 +273,18 @@ void LFenceInsertion::runOnFunctions(BinaryContext &BC) {
           //   jmpq *(%rsi)
           // gets rewritten to:
           //   pushq (%rsi)
-          //   lfence
+          //   lfence //XXX Not needed, according to Intel?
           //   shlq $0, (%rsp)
           //   lfence
           //   retq
+
+          // Since this mitigation clobbers the redzone, we need to make
+          // sure that this function never uses it.
+          if (Redzone) {
+            report_redzone_error();
+          }
+          MemIndirectJmp = true;
+
           IndirectBranchInfo BrInfo(Inst, MIB);
           const auto &MemRef = BrInfo.Memory;
 
